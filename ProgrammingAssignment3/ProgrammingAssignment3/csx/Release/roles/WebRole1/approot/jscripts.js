@@ -1,4 +1,7 @@
 ﻿window.onload = function () {
+    google.charts.load('current', { packages: ['corechart', 'line'] });
+    google.charts.setOnLoadCallback(drawAxisTickColors);
+
     function refreshStats() {
         $.ajax({
             type: "POST",
@@ -24,42 +27,38 @@
                 }
                 $("#cState").html(arr[0]);
                 if (!isNaN(arr[1] )) {
-                    $("#CPU").html(parseInt(arr[1]).toFixed(2));
+                    $("#CPU").html(parseFloat(arr[1]).toFixed(2));
                     $("#cpuFilled").css("width", arr[1] + "%");
+                    drawAxisTickColors(arr[16], "cpuDiv", "CPU %");
                 } else {
                     $("#CPU").html("Retrieving");
                     $("#cpuFilled").css("width", "0%");
+                    drawAxisTickColors("0 0|", "cpuDiv", "CPU %");
                 }
                 if (!isNaN(arr[2] )) {
-                    $("#ramU").html(parseInt(arr[2]).toFixed(2));
-                    $("#ramFilled").css("width", (arr[2]/1024) * 100 + "%");
+                    $("#ramU").html(parseFloat(arr[2]).toFixed(2));
+                    $("#ramFilled").css("width", (arr[2] / 1024) * 100 + "%");
+                    drawAxisTickColors(arr[16], "ramDiv", "RAM Usage");
                 } else {
                     $("#ramU").html("Retrieving");
                     $("#ramFilled").css("width", "0%");
+                    drawAxisTickColors("0 0|", "ramDiv", "RAM Usage");
                 }
                 if (!isNaN(arr[2] )) {
                     $("#ramA").html((1024 - parseInt(arr[2])).toFixed(2));
-                    $("#ramAFilled").css("width", ((1024- arr[2])/1024) * 100 + "%");
+                    $("#ramAFilled").css("width", ((1024 - arr[2]) / 1024) * 100 + "%");
+                    drawAxisTickColors(arr[16], "ramADiv", "RAM Available");
                 } else {
                     $("#ramU").html("Retrieving");
                     $("#ramAFilled").css("width", "0%");
+                    drawAxisTickColors("0 0|", "ramADiv", "RAM Available");
                 }
                 $("#urlsCrawled").html(arr[3]);
                 $("#queueSize").html(arr[14]);
                 $("#tableSize").html(arr[15]);
                 $("#errorTable").html("Error Links Found : ");
-                for (var i = 16; i < arr.length; i++) {
-                    var error = arr[i].split("|||");
-                    if (error[0] != "No " && error[1] != " Data") {
-                        var url = $("<a href='" + error[0] + "'></h4>").text(error[0]);
-                        var msg = $("<h4></h4>").text("Message : " + error[1]);
-                        var errorDiv = $("<div class='errorDiv'></div>")
-                        errorDiv.append(url, msg);
-                        $("#errorTable").append(errorDiv);
-                    }
-                }
                 $("#lastTenTable").html("Last Ten URLs crawled : ");
-                for (var i = 4; i <= 13; i++) {
+                for (var i = 13; i >= 4; i--) {
                     if (arr[i] != "No Data") {
                         var url = $("<a href='" + arr[i] + "'></h4>").text(arr[i]);
                     } else {
@@ -68,6 +67,16 @@
                     var link = $("<div class='linkDiv'></div>")
                     link.append(url);
                     $("#lastTenTable").append(link);
+                }
+                for (var i = arr.length - 1; i >= 17; i--) {
+                    var error = arr[i].split("|||");
+                    if (error[0] != "No " && error[1] != " Data") {
+                        var url = $("<a href='" + error[0] + "'></h4>").text(error[0]);
+                        var msg = $("<h4></h4>").text("Message : " + error[1]);
+                        var errorDiv = $("<div class='errorDiv'></div>")
+                        errorDiv.append(url, msg);
+                        $("#errorTable").append(errorDiv);
+                    }
                 }
             },
             error: function (request, status, error) {
@@ -79,6 +88,7 @@
     var timer = setInterval(refreshStats, 5000);
 };
 
+// Starts the crawler
 $(function () {
     $("#start").click(function () {
         $.ajax({
@@ -96,6 +106,7 @@ $(function () {
     });
 });
 
+// Stops the crawler
 $(function () {
     $("#stop").click(function () {
         $.ajax({
@@ -113,6 +124,7 @@ $(function () {
     });
 });
 
+// Clears the crawler
 $(function () {
     $("#clear").click(function () {
         $.ajax({
@@ -131,6 +143,7 @@ $(function () {
     });
 });
 
+// Submits a query for the article title
 $(function () {
     $("#submit").click(function () {
         $.ajax({
@@ -155,3 +168,69 @@ $(function () {
         });
     });
 });
+
+// Creates a chart of performance data for the last hour
+function drawAxisTickColors(values, divName, statName) {
+    $("#" + divName).html = "";
+    var data = new google.visualization.DataTable();
+    data.addColumn('number', 'X');
+    data.addColumn('number', statName);
+
+    console.log(values);
+    values = values.substring(0, values.length - 1);
+    var points = values.split("|");
+    for (var i = 0; i < points.length; i++) {
+        var cpuOrRam = points[i].split(" ");
+        if (divName == "cpuDiv") {
+            data.addRows([
+                [5 * i, parseInt(cpuOrRam[0])]
+            ])
+        } else if (divName == "ramDiv") {
+            data.addRows([
+                [5 * i, parseInt(cpuOrRam[1])]
+            ])
+        } else {
+            data.addRows([
+                [5 * i, 1024 - parseInt(cpuOrRam[1])]
+            ])
+        }
+    }
+
+    var options = {
+        hAxis: {
+            title: 'Time (Last Hour)',
+            textStyle: {
+                color: '#7e7e7e',
+                fontSize: 20,
+                fontName: 'Open Sans',
+                bold: false,
+                italic: false
+            },
+            titleTextStyle: {
+                color: '#7e7e7e',
+                fontSize: 16,
+                fontName: 'Open Sans',
+                bold: false,
+                italic: false
+            }
+        },
+        vAxis: {
+            title: statName,
+            textStyle: {
+                color: '#7e7e7e',
+                fontSize: 16,
+                bold: false,
+                italic: false
+            },
+            titleTextStyle: {
+                color: '#7e7e7e',
+                fontSize: 16,
+                bold: false,
+                italic: false
+            }
+        },
+        colors: ['#b20000', '#b20000']
+    };
+    var chart = new google.visualization.LineChart(document.getElementById(divName));
+    chart.draw(data, options);
+}

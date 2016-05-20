@@ -55,7 +55,7 @@ span {
 }
 
 #ramAFilled {
-    background-color: green;
+    background-color: #b20000;
     height: 100%;
     width: 0%;
 }
@@ -73,9 +73,10 @@ span {
 
 #pageStats, #errorTable, #lastTenTable {
     border: 2px solid #7e7e7e;
-    margin-top: 5px;
+    margin-top: 20px;
     padding: 5px;
     width: 100%;
+    overflow-x: scroll;
 }
 
 #errorTable {

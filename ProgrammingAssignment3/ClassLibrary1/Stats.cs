@@ -13,11 +13,19 @@ namespace ClassLibrary
             this.cpu = cpu;
         }
 
+        public Stats(string perf) {
+            this.PartitionKey = "statCounter";
+            this.RowKey = "statPerf";
+
+            this.perf = perf;
+        }
+
         public Stats() { }
 
         public double memory { get; set; }
 
         public double cpu { get; set; }
 
+        public string perf { get; set; }
     }
 }

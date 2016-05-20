@@ -26,6 +26,24 @@
     </xs:restriction>
   </xs:simpleType>
 
+  <xs:simpleType name="IfxTracingLevelType">
+    <xs:restriction base="xs:string">
+        <xs:enumeration value="None"/>
+        <xs:enumeration value="Critical"/>
+        <xs:enumeration value="Error"/>
+        <xs:enumeration value="Warning"/>
+        <xs:enumeration value="Informational"/>
+        <xs:enumeration value="Verbose"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="IfxSamplingMethodType">
+    <xs:restriction base="xs:string">
+        <xs:enumeration value="SimpleRandom"/>
+        <xs:enumeration value="Throttling"/>
+    </xs:restriction>
+  </xs:simpleType>
+
   <xs:simpleType name="DateTimeType">
     <xs:restriction base="xs:dateTime">
       <!-- enforce the time to be in UTC -->
@@ -383,8 +401,10 @@
     <xs:attribute name="customerResourceFieldName" type="xs:string" use="optional" />
     <!-- If enabled to log to a customer resource (on-behalf field), this can be used to specify to also log to the service account -->
     <xs:attribute name="logToServiceEvent" type="xs:boolean" use="optional" default="false"/>
-    <!-- Enable to allow multiple file watchers with the same event name to have different containers -->
-    <xs:attribute name="multiContainers" type="xs:boolean" use="optional" default="false" />
+    <!-- Enable to allow multiple file watchers with the same event name to have different containers.
+         2/23 - Changing default from false to true, since it was kept false to prevent an incompatibility
+         with MA22. -->
+    <xs:attribute name="multiContainers" type="xs:boolean" use="optional" default="true" />
     <!-- How long to delay running the event derived from the external tables -->
     <xs:attribute name="queryDelay" type="xs:duration" use="optional" />
     <xs:attribute name="extendedAttributes" type="xs:string" use="optional"/>
@@ -721,15 +741,29 @@
     </xs:complexContent>
   </xs:complexType>
 
+  <!-- If set to true MA does not do event message parameter substitution. If set to all, MA does not
+       do the substitution for every provider in the config (even imports), unless those providers specify
+       false explicitly -->
+  <xs:simpleType name="EventMsgFormattingType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="true"/>
+      <xs:enumeration value="false"/>
+      <xs:enumeration value="all"/>
+    </xs:restriction>
+  </xs:simpleType>
+
   <!-- If persist session is true then MA will not stop the current ETW session when it shuts down or
        refresh the session when it starts back up. The result is that events logged while MA is shutdown
        are still recorded. -->
   <xs:complexType name="EtwProvidersType">
     <xs:sequence>
+      <xs:element name="AdditionalHeaderFields" type="AdditionalHeaderFieldsType" minOccurs="0" maxOccurs="1" />
+      <xs:element name="RemoveHeaderFields" type="AdditionalHeaderFieldsType" minOccurs="0" maxOccurs="1" />
       <xs:element name="EtwProvider" type="EtwProviderType" minOccurs="1" maxOccurs="unbounded" />
     </xs:sequence>
     <xs:attribute name="persist" type="xs:string" use="optional" default="true" />
     <xs:attribute name="traceSessionName" type="xs:string" use="optional" />
+    <xs:attribute name="disableMessageFormatting" type="EventMsgFormattingType" use="optional" />
   </xs:complexType>
 
   <xs:complexType name="FileMonitorsType">
@@ -915,6 +949,13 @@
     </xs:sequence>
   </xs:complexType>
 
+  <xs:complexType name="EventPublisherType">
+    <xs:sequence>
+      <xs:element name="Content" type="xs:string" />
+      <xs:element name="Key" type="xs:string" minOccurs="0" maxOccurs="1" />
+    </xs:sequence>
+  </xs:complexType>
+
   <xs:complexType name="CosmosAnnotationType">
     <xs:complexContent>
       <xs:extension base="StreamingAnnotationBaseType">
@@ -983,6 +1024,7 @@
       <xs:element name="OnBehalf" type="OnBehalfAnnotationType" minOccurs="0" maxOccurs="1"/>
       <xs:element name="DGrep" type="DGrepAnnotationType" minOccurs="0" maxOccurs="1"/>
       <xs:element name="LogAnalytics" type="LogAnalyticsAnnotationType" minOccurs="0" maxOccurs="1"/>
+      <xs:element name="EventPublisher" type="EventPublisherType" minOccurs="0" maxOccurs="1"/>
     </xs:all>
    <!-- name is treated as regular expression -->
    <xs:attribute name="name" type="xs:string" use="required"/>
@@ -1017,6 +1059,9 @@
     <xs:complexContent>
       <xs:extension base="EventWithNameType">
         <xs:attribute name="id" type="xs:string" use="required" />
+        <xs:attribute name="samplingRate" type="xs:double" use="optional" />
+        <xs:attribute name="samplingMethod" type="IfxSamplingMethodType" use="optional" />
+        <xs:attribute name="maxLevelSampled" type="IfxTracingLevelType" use="optional" />
       </xs:extension>
     </xs:complexContent>
   </xs:complexType>

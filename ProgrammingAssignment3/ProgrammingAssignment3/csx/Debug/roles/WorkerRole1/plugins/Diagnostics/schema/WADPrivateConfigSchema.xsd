@@ -32,10 +32,17 @@
     </xs:attribute>
   </xs:complexType>
 
+  <xs:complexType name="EventHub">
+    <xs:attribute name="Url" type="xs:anyURI" use="required" />
+    <xs:attribute name="SharedAccessKeyName" type="xs:string" use="required" />
+    <xs:attribute name="SharedAccessKey" type="xs:string" use="required" />
+  </xs:complexType>
+
   <xs:element name="PrivateConfig">
     <xs:complexType>
       <xs:all>
-        <xs:element name="StorageAccount" minOccurs="1" type="StorageAccount"/>    
+        <xs:element name="StorageAccount" minOccurs="1" type="StorageAccount" />
+        <xs:element name="EventHub" minOccurs="0" type="EventHub" />
       </xs:all>
     </xs:complexType>
   </xs:element>

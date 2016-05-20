@@ -30,7 +30,7 @@ namespace ClassLibrary
         //Error Sites
         public Website(string url, string error) {
             this.PartitionKey = "errorSite";
-            this.RowKey = string.Format("{0:D19}", DateTime.MaxValue.Ticks - DateTime.UtcNow.Ticks);
+            this.RowKey = CalculateMD5Hash(url);
 
             this.url = url;
             this.error = error;

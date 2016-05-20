@@ -682,6 +682,7 @@ NOTE: In MDS offset and queryDelay have the opposite meanings.  We should obsole
 
   <xs:simpleType name="RegionType">
     <xs:restriction base="xs:string">
+      <xs:enumeration value="earth"/>
       <xs:enumeration value="eastasia"/>
       <xs:enumeration value="southeastasia"/>
       <xs:enumeration value="eastus"/>
@@ -706,8 +707,15 @@ NOTE: In MDS offset and queryDelay have the opposite meanings.  We should obsole
       <xs:enumeration value="chinaeast"/>
       <xs:enumeration value="chinanorth"/>
       <xs:enumeration value="usgoveast"/>
+      <xs:enumeration value="usgovvirginia"/>    <!-- ARM compatible: use this one -->
       <xs:enumeration value="usgovcentral"/>
-      <xs:enumeration value="earth"/>
+      <xs:enumeration value="usgoviowa"/>        <!-- ARM compatible: use this one -->
+      <xs:enumeration value="germanycentral"/>
+      <xs:enumeration value="germanynortheast"/>
+      <xs:enumeration value="canadaeast"/>
+      <xs:enumeration value="canadacentral"/>
+      <xs:enumeration value="uknorth"/>
+      <xs:enumeration value="uksouth2"/>
     </xs:restriction>
   </xs:simpleType>
 
@@ -748,6 +756,7 @@ NOTE: In MDS offset and queryDelay have the opposite meanings.  We should obsole
       <xs:element name="Indexing" type="IndexingSettingsType" minOccurs="0" maxOccurs="1" />
       <xs:element name="Cosmos" type="CosmosSettingsType" minOccurs="0" maxOccurs="1" />
       <xs:element name="LogAnalytics" type="LogAnalyticsSettingsType" minOccurs="0" maxOccurs="1" />
+      <xs:element name="EventPublisher" type="EventPublisherSettingsType" minOccurs="0" maxOccurs="1" />
     </xs:sequence>
     <xs:attribute name="name" type="xs:string" use="required" />
     <xs:attribute name="nameSpace" type="xs:string" use="required"/>
@@ -809,6 +818,11 @@ NOTE: In MDS offset and queryDelay have the opposite meanings.  We should obsole
       <xs:enumeration value="LogAnalyticsDatabase"/>
     </xs:restriction>
   </xs:simpleType>
+
+  <xs:complexType name="EventPublisherSettingsType">
+    <xs:attribute name="serviceBusNamespace" type="xs:string" use="required" />
+    <xs:attribute name="connectionString" type="xs:string" use="required" />
+  </xs:complexType>
 
   <xs:complexType name="XstoreAccountInfosType">
     <xs:sequence>

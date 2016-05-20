@@ -573,7 +573,7 @@
 
   <xs:complexType name="Metrics">
     <xs:sequence>
-      <xs:element name="MetricAggregation" type="MetricAggregation" minOccurs="1" maxOccurs="5" />
+      <xs:element name="MetricAggregation" type="MetricAggregation" minOccurs="0" maxOccurs="5" />
     </xs:sequence>
     <xs:attribute name="resourceId" type="xs:string" use="required" />
   </xs:complexType>
@@ -701,27 +701,35 @@
     </xs:sequence>
   </xs:complexType>
 
+  <xs:complexType name="ApplicationInsightsSink">
+    <xs:simpleContent>
+      <xs:extension base="xs:string" />
+    </xs:simpleContent>
+  </xs:complexType>
+
+  <xs:complexType name="EventHubSink">
+    <xs:attribute name="Url" type="xs:anyURI" use="required" />
+    <xs:attribute name="SharedAccessKeyName" type="xs:string" use="required" />
+  </xs:complexType>
+
   <xs:complexType name="Sink">
-    <xs:all>
-      <!-- For now since Application insights is the only sink type. We will force the user to specify it so that they don't provide an empty sink. -->
-      <!-- Once more sinks come online, we can redo this to have any one of the available options. -->
-      <xs:element name="ApplicationInsights" minOccurs="1" maxOccurs="1" type="xs:string" />
+    <xs:sequence>
+      <xs:choice>
+        <xs:element name="ApplicationInsights" type="ApplicationInsightsSink" />
+        <xs:element name="EventHub" type="EventHubSink" />
+      </xs:choice>
       <xs:element name="Channels" minOccurs="0" maxOccurs="1" type="SinkChannels" />
-    </xs:all>
+    </xs:sequence>
     <xs:attribute name="name" type="sinkName" use="required" />
   </xs:complexType>
 
   <xs:element name="PublicConfig">
     <xs:complexType>
       <xs:all>
-        <xs:element name="WadCfg">
+        <xs:element name="WadCfg" minOccurs="0" maxOccurs="1">
           <xs:complexType>
             <xs:all>
               <xs:element name="DiagnosticMonitorConfiguration" type="DiagnosticMonitorConfiguration" minOccurs="1" maxOccurs="1" />
-              <!--
-              For now we are only allowing a single sink. In future we can remove this restriction.
-              The idea is, to begin with, user can only send the data to Application Insights and that too onto a single AI resource.
-              -->
               <xs:element name="SinksConfig" minOccurs="0" maxOccurs="1">
                 <xs:complexType>
                   <xs:sequence maxOccurs="unbounded">
@@ -730,6 +738,12 @@
                 </xs:complexType>
               </xs:element>
             </xs:all>
+          </xs:complexType>
+        </xs:element>
+        <xs:element name="WadCfgBlob"  minOccurs="0" maxOccurs="1">
+          <xs:complexType>
+            <xs:attribute name="containerName" type="xs:string" />
+            <xs:attribute name="blobName" type="xs:string" />
           </xs:complexType>
         </xs:element>
         <xs:element name="LocalResourceDirectory" minOccurs="0" maxOccurs="1"  type="DirectoryAbsolute" />

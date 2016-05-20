@@ -112,6 +112,8 @@ namespace WebRole1
             stats.Add(URLsLeft().ToString());
             // Table Index
             stats.Add(TableIndexCount().ToString());
+            // Getting the last hour of stats
+            stats.Add(hourPerf());
             // Any Errors
             foreach (string error in GetErrors())
             {
@@ -157,11 +159,7 @@ namespace WebRole1
             // Only allow query if table exists, otherwise return no data to avoid concurrency issues incase index was cleared recently.
             if (table.Exists())
             {
-                var query = new TableQuery<Website>().Where(TableQuery.CombineFilters(
-                    TableQuery.GenerateFilterCondition("PartitionKey", QueryComparisons.Equal, "errorSite"),
-                    TableOperators.And,
-                    TableQuery.GenerateFilterCondition("RowKey", QueryComparisons.GreaterThan, "0")
-                    ));
+                var query = new TableQuery<Website>().Where(TableQuery.GenerateFilterCondition("PartitionKey", QueryComparisons.Equal, "errorSite"));
 
                 var result = table.ExecuteQuery(query);
 
@@ -208,6 +206,27 @@ namespace WebRole1
                 lastTen.Add("No Data");
             }
             return lastTen;
+        }
+
+        // Gets performance for the last hour
+        private string hourPerf()
+        {
+            CloudTable table = GetTable("sitesData");
+            // Only allow query if table exists, otherwise return no data to avoid concurrency issues incase index was cleared recently.
+            if (table.Exists())
+            {
+                var query = new TableQuery<Stats>().Where(TableQuery.CombineFilters(
+                    TableQuery.GenerateFilterCondition("PartitionKey", QueryComparisons.Equal, "statCounter"),
+                    TableOperators.And,
+                    TableQuery.GenerateFilterCondition("RowKey", QueryComparisons.Equal, "statPerf")
+                    ));
+                var result = table.ExecuteQuery(query);
+                foreach (Stats entity in result)
+                {
+                    return entity.perf;
+                }
+            }
+            return "0 0|";
         }
 
         // Returns the number of URLs currently crawled

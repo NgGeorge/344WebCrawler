@@ -34,6 +34,10 @@ namespace WorkerRole1
         private int currentCount;
         //Last 10 urls crawled
         private List<string> lastTen;
+        //Worker Stats for the last hour
+        private List<string> hourPerf;
+        //Keeps track of the minutes
+        private int minuteCount;
 
         public override void Run()
         {
@@ -61,9 +65,11 @@ namespace WorkerRole1
             // Initializing Worker State
             EnqueueMessage("workeractivate", "true");
 
+            // Setting up performance tracking over time
             Timer performanceTimer = new Timer(updatePerformance, null, 3000, 5000);
             cpuCounter = new PerformanceCounter("Process", "% Processor Time", Process.GetCurrentProcess().ProcessName);
             memCounter = new PerformanceCounter("Process", "Working Set", Process.GetCurrentProcess().ProcessName);
+            hourPerf = new List<string>();
 
             lastTen = new List<string>();
             // Setting up last 10 urls crawled list
@@ -117,36 +123,43 @@ namespace WorkerRole1
                             {
                                 break;
                             }
-                            if (sitemap.SelectSingleNode("lastmod") != null)
+                            if (!alreadyCrawled.Contains(sitemap.SelectSingleNode("loc").InnerText))
                             {
-                               
-                                if (DateTime.Parse(sitemap.SelectSingleNode("lastmod").InnerText) >= DateTime.Parse("03/01/2016"))
+                                if (sitemap.SelectSingleNode("lastmod") != null)
                                 {
-                                    // Adds to sitemap queue if xml file type
-                                    if (sitemap.SelectSingleNode("loc").InnerText.Contains(".xml") && (sitemap.SelectSingleNode("loc").InnerText.Contains(".cnn.com")))
+
+                                    if (DateTime.Parse(sitemap.SelectSingleNode("lastmod").InnerText) >= DateTime.Parse("03/01/2016"))
                                     {
-                                        EnqueueMessage("sitemapqueue", sitemap.SelectSingleNode("loc").InnerText);
+                                        // Adds to sitemap queue if xml file type
+                                        if (sitemap.SelectSingleNode("loc").InnerText.Contains(".xml") && (sitemap.SelectSingleNode("loc").InnerText.Contains(".cnn.com")))
+                                        {
+                                            alreadyCrawled.Add(sitemap.SelectSingleNode("loc").InnerText);
+                                            EnqueueMessage("sitemapqueue", sitemap.SelectSingleNode("loc").InnerText);
+                                        }
+                                        // Adds to regular url queue if standard url
+                                        else if (sitemap.SelectSingleNode("loc").InnerText.Contains(".cnn.com"))
+                                        {
+                                            alreadyCrawled.Add(sitemap.SelectSingleNode("loc").InnerText);
+                                            EnqueueMessage("urlqueue", sitemap.SelectSingleNode("loc").InnerText);
+                                        }
                                     }
-                                    // Adds to regular url queue if standard url
-                                    else if (sitemap.SelectSingleNode("loc").InnerText.Contains(".cnn.com"))
+                                }
+                                else if ((sitemap.SelectSingleNode("lastmod") == null) && (sitemap.SelectSingleNode("loc").InnerText.Contains(".cnn.com") || sitemap.SelectSingleNode("loc").InnerText.Contains("bleacherreport.com")))
+                                {
+                                    bool isAllowed = true;
+                                    foreach (string disallowedURL in disallowed)
                                     {
+                                        if (sitemap.SelectSingleNode("loc").InnerText.Contains(disallowedURL) == true)
+                                        {
+                                            isAllowed = false;
+                                            break;
+                                        }
+                                    }
+                                    if (isAllowed)
+                                    {
+                                        alreadyCrawled.Add(sitemap.SelectSingleNode("loc").InnerText);
                                         EnqueueMessage("urlqueue", sitemap.SelectSingleNode("loc").InnerText);
                                     }
-                                }
-                            }  else if ((sitemap.SelectSingleNode("lastmod") == null) && (sitemap.SelectSingleNode("loc").InnerText.Contains(".cnn.com") || sitemap.SelectSingleNode("loc").InnerText.Contains("bleacherreport.com")))
-                            {
-                                bool isAllowed = true;
-                                foreach (string disallowedURL in disallowed)
-                                {
-                                    if (sitemap.SelectSingleNode("loc").InnerText.Contains(disallowedURL) == true)
-                                    {
-                                        isAllowed = false;
-                                        break;
-                                    }
-                                }
-                                if (isAllowed)
-                                {
-                                    EnqueueMessage("urlqueue", sitemap.SelectSingleNode("loc").InnerText);
                                 }
                             }
                         }
@@ -160,99 +173,106 @@ namespace WorkerRole1
                         if (urlMsg != null)
                         {
                             HtmlWeb web = new HtmlWeb();
-                            HtmlDocument document = web.Load(urlMsg.AsString);
-                            var allHrefNodes = document.DocumentNode.SelectNodes(".//a[@href]");
-                            if (allHrefNodes != null)
+                            try
                             {
-                                foreach (HtmlNode item in allHrefNodes)
+                                HtmlDocument document = web.Load(urlMsg.AsString);
+                                var allHrefNodes = document.DocumentNode.SelectNodes(".//a[@href]");
+                                if (allHrefNodes != null)
                                 {
-                                    string currentHref = item.GetAttributeValue("href", string.Empty);
-                                    if (currentHref.StartsWith("/") && currentHref != "/")
+                                    foreach (HtmlNode item in allHrefNodes)
                                     {
-                                        if (currentHref.StartsWith("//"))
+                                        string currentHref = item.GetAttributeValue("href", string.Empty);
+                                        if (currentHref.StartsWith("/") && currentHref != "/")
                                         {
-                                            currentHref = currentHref.Replace("//", "http://");
-                                        } else {
-                                            // Creates full url out of relative url
-                                            var url = urlMsg.AsString.Split(new string[] { ".com" }, StringSplitOptions.None);
-                                            currentHref = url[0] + ".com" + currentHref;
-                                        } 
-                                    }
-                                    if ((currentHref.Contains(".cnn.com") || currentHref.Contains("bleacherreport.com/articles")) && currentHref != "/")
-                                    {
-                                        // Seperating the already crawled check in order to only check when the domain is correct 
-                                        if (!alreadyCrawled.Contains(currentHref))
-                                        {
-                                            bool isAllowed = true;
-                                            foreach (string disallowedURL in disallowed)
+                                            if (currentHref.StartsWith("//"))
                                             {
-                                                if (currentHref.Contains(disallowedURL) == true)
+                                                currentHref = currentHref.Replace("//", "http://");
+                                            }
+                                            else
+                                            {
+                                                // Creates full url out of relative url
+                                                var url = urlMsg.AsString.Split(new string[] { ".com" }, StringSplitOptions.None);
+                                                currentHref = url[0] + ".com" + currentHref;
+                                            }
+                                        }
+                                        if ((currentHref.Contains(".cnn.com") || currentHref.Contains("bleacherreport.com/articles")) && currentHref != "/")
+                                        {
+                                            // Seperating the already crawled check in order to only check when the domain is correct 
+                                            if (!alreadyCrawled.Contains(currentHref))
+                                            {
+                                                bool isAllowed = true;
+                                                foreach (string disallowedURL in disallowed)
                                                 {
-                                                    isAllowed = false;
-                                                    break;
+                                                    if (currentHref.Contains(disallowedURL) == true)
+                                                    {
+                                                        isAllowed = false;
+                                                        break;
+                                                    }
                                                 }
+                                                if (isAllowed)
+                                                {
+                                                    EnqueueMessage("urlqueue", currentHref);
+                                                }
+                                                alreadyCrawled.Add(currentHref);
                                             }
-                                            if (isAllowed)
-                                            {
-                                                EnqueueMessage("urlqueue", currentHref);
-                                            }
-                                            alreadyCrawled.Add(currentHref);
                                         }
                                     }
                                 }
-                            }
 
-                            HtmlNode node = document.DocumentNode.SelectSingleNode("//meta[@itemprop='datePublished']");
-
-                            if (document.DocumentNode.SelectSingleNode("//meta[@itemprop='datePublished']") != null)
-                            {
-                                AddToTable(urlMsg.AsString, document.DocumentNode.SelectSingleNode("//title").InnerHtml, document.DocumentNode.SelectSingleNode("//meta[@itemprop='datePublished']").Attributes["content"].Value);
-                            }
-                            else if (document.DocumentNode.SelectSingleNode("//meta[@name='pubdate']") != null)
-                            {
-                                AddToTable(urlMsg.AsString, document.DocumentNode.SelectSingleNode("//title").InnerHtml, document.DocumentNode.SelectSingleNode("//meta[@name='pubdate']").Attributes["content"].Value);
-                            }
-                            else if ((document.DocumentNode.SelectSingleNode("//meta[@name='description']") != null))
-                            {
-                                if (!document.DocumentNode.SelectSingleNode("//meta[@name='description']").Attributes["content"].Value.Contains("Error"))
+                                if (document.DocumentNode.SelectSingleNode("//title") != null)
                                 {
-                                    AddToTable(urlMsg.AsString, document.DocumentNode.SelectSingleNode("//title").InnerHtml, "Undated");
-                                }
-                                else
-                                {
-                                    //CNN error pages
-                                    AddToErrors(urlMsg.AsString, "Page Not Found");
-                                }
-                            }
-                            else if (document.DocumentNode.SelectSingleNode("//meta[@name='Description']") != null)
-                            {
-                                if (!document.DocumentNode.SelectSingleNode("//meta[@name='Description']").Attributes["content"].Value.Contains("Error"))
-                                {
-                                    AddToTable(urlMsg.AsString, document.DocumentNode.SelectSingleNode("//title").InnerHtml, "Undated");
-                                }
-                                else
-                                {
-                                    //CNN error pages
-                                    AddToErrors(urlMsg.AsString, "Page Not Found");
-                                }
-                            }
-                            else
-                            {
-                                if (document.DocumentNode.SelectSingleNode("//title").InnerHtml == "Bleacher Report")
-                                {
+                                    if (document.DocumentNode.SelectSingleNode("//meta[@itemprop='datePublished']") != null)
+                                    {
+                                        AddToTable(urlMsg.AsString, document.DocumentNode.SelectSingleNode("//title").InnerHtml, document.DocumentNode.SelectSingleNode("//meta[@itemprop='datePublished']").Attributes["content"].Value);
+                                    }
+                                    else if (document.DocumentNode.SelectSingleNode("//meta[@name='pubdate']") != null)
+                                    {
+                                        AddToTable(urlMsg.AsString, document.DocumentNode.SelectSingleNode("//title").InnerHtml, document.DocumentNode.SelectSingleNode("//meta[@name='pubdate']").Attributes["content"].Value);
+                                    }
+                                    else if ((document.DocumentNode.SelectSingleNode("//meta[@name='description']") != null))
+                                    {
+                                        if (!document.DocumentNode.SelectSingleNode("//meta[@name='description']").Attributes["content"].Value.Contains("Error"))
+                                        {
+                                            AddToTable(urlMsg.AsString, document.DocumentNode.SelectSingleNode("//title").InnerHtml, "Undated");
+                                        }
+                                        else
+                                        {
+                                            //CNN error pages
+                                            AddToErrors(urlMsg.AsString, "Page Not Found");
+                                        }
+                                    }
+                                    else if (document.DocumentNode.SelectSingleNode("//meta[@name='Description']") != null)
+                                    {
+                                        if (!document.DocumentNode.SelectSingleNode("//meta[@name='Description']").Attributes["content"].Value.Contains("Error"))
+                                        {
+                                            AddToTable(urlMsg.AsString, document.DocumentNode.SelectSingleNode("//title").InnerHtml, "Undated");
+                                        }
+                                        else
+                                        {
+                                            //CNN error pages
+                                            AddToErrors(urlMsg.AsString, "Page Not Found");
+                                        }
+                                    }
                                     //Bleacher Report error pages
-                                    AddToErrors(urlMsg.AsString, "Page Not Found");
-                                } 
-                                // For old CNN pages
-                                else if (document.DocumentNode.SelectSingleNode("//title").InnerHtml.Contains("CNN"))
-                                {
-                                    AddToTable(urlMsg.AsString, document.DocumentNode.SelectSingleNode("//title").InnerHtml, "Undated");
+                                    else if (document.DocumentNode.SelectSingleNode("//title").InnerHtml == "Bleacher Report")
+                                    {
+                                        AddToErrors(urlMsg.AsString, "Page Not Found");
+                                    }
+                                    // For old CNN pages
+                                    else if (document.DocumentNode.SelectSingleNode("//title").InnerHtml.ToLower().Contains("allpolitics") ||
+                                             document.DocumentNode.SelectSingleNode("//title").InnerHtml.ToLower().Contains("cnn"))
+                                    {
+                                        AddToTable(urlMsg.AsString, document.DocumentNode.SelectSingleNode("//title").InnerHtml, "Undated");
+                                    }
+                                    else
+                                    {
+                                        AddToErrors(urlMsg.AsString, document.DocumentNode.SelectSingleNode("//title").InnerHtml);
+                                    }
                                 }
-                                // All other standard errors
-                                else
-                                {
-                                    AddToErrors(urlMsg.AsString, document.DocumentNode.SelectSingleNode("//title").InnerHtml);
-                                }
+                            }
+                            catch (System.Net.WebException exc)
+                            {
+                                // Arbitrary connection closing on HTMLAgilityPack
                             }
                             alreadyCrawled.Add(urlMsg.AsString);
                             urlQueue.DeleteMessage(urlMsg);
@@ -384,7 +404,7 @@ namespace WorkerRole1
             table.CreateIfNotExists();
 
             Website result = new Website(url, message);
-            TableOperation insertOperation = TableOperation.Insert(result);
+            TableOperation insertOperation = TableOperation.InsertOrReplace(result);
             table.Execute(insertOperation);
         }
 
@@ -398,6 +418,28 @@ namespace WorkerRole1
             Stats result = new Stats(cpu, (ram / 1024 / 1024));
             TableOperation insertOperation = TableOperation.InsertOrReplace(result);
             table.Execute(insertOperation);
+
+            //To track worker performance over the last hour
+            //Adds one performance update every 30 seconds
+            minuteCount++;
+            if (minuteCount >= 6)
+            {
+                //Remove the oldest logged performance stat if more than an hour of stats is logged
+                if (hourPerf.Count > 120)
+                {
+                    hourPerf.RemoveAt(0);
+                }
+                hourPerf.Add(cpu.ToString() + " " + (ram / 1024 / 1024).ToString());
+                string loggedStats = "";
+                foreach ( string loggedStat in hourPerf)
+                {
+                    loggedStats += loggedStat + "|";
+                }
+                Stats perfList = new Stats(loggedStats);
+                insertOperation = TableOperation.InsertOrReplace(perfList);
+                table.Execute(insertOperation);
+                minuteCount = 0;
+            }
 
             Status currentStatus = new Status(workerState);
             insertOperation = TableOperation.InsertOrReplace(currentStatus);

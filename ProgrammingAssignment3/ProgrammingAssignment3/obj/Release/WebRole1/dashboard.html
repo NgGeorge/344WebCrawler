@@ -7,6 +7,7 @@
     <meta name="description" content="A web crawler that crawls CNN & BleacherReport/NBA" />
     <link rel="stylesheet" href="style.css" />
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.2/jquery.min.js"></script>
+    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
     <script src="jscripts.js" type="text/javascript"></script>
 </head>
 <body>
@@ -19,14 +20,16 @@
                 <h2> Crawler State : <span id="cState">Retrieving Data</span></h2>
                 <h3> CPU : <span id="CPU"></span> %</h3>
                 <div id="cpuBar"><div id="cpuFilled"></div></div>
+                <div id="cpuDiv"></div>
                 <h3> RAM Utilized : <span id="ramU"></span> MB</h3>
                 <div id="ramBar"><div id="ramFilled"></div> </div>
+                <div id="ramDiv"></div>
                 <h3> RAM Available : <span id="ramA"></span> MB</h3>
                 <div id="ramABar"><div id="ramAFilled"></div> </div>
+                <div id="ramADiv"></div>
                 <h3> URLS Crawled : <span id="urlsCrawled"></span> URLs</h3>
                 <h3> Queue Size : <span id="queueSize"></span> URLs</h3>
                 <h3> Table Size : <span id="tableSize"></span> Sites</h3>
-                <div id="errorTable">Error Links Found : </div>
             </div>
             <div class="col-md-6">
                 <div id="ssc">
@@ -44,6 +47,7 @@
                 <h4>Url : </h4>
                 </div>
                 <div id="lastTenTable">Last Ten URLs crawled : </div>
+                <div id="errorTable">Error Links Found : </div>
             </div>
         </div>
     </div>

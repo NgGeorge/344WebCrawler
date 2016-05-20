@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<serviceModel xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" name="ProgrammingAssignment3" generation="1" functional="0" release="0" Id="23536266-9821-475f-844d-adc14c27dac1" dslVersion="1.2.0.0" xmlns="http://schemas.microsoft.com/dsltools/RDSM">
+<serviceModel xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" name="ProgrammingAssignment3" generation="1" functional="0" release="0" Id="e9863df5-b63b-49fa-83c4-fb19422c37c8" dslVersion="1.2.0.0" xmlns="http://schemas.microsoft.com/dsltools/RDSM">
   <groups>
     <group name="ProgrammingAssignment3Group" generation="1" functional="0" release="0">
       <componentports>
@@ -62,7 +62,7 @@
       </maps>
       <components>
         <groupHascomponents>
-          <role name="WebRole1" generation="1" functional="0" release="0" software="C:\Users\iGuest\Desktop\ProgrammingAssignment3\ProgrammingAssignment3\csx\Release\roles\WebRole1" entryPoint="base\x64\WaHostBootstrapper.exe" parameters="base\x64\WaIISHost.exe " memIndex="-1" hostingEnvironment="frontendadmin" hostingEnvironmentVersion="2">
+          <role name="WebRole1" generation="1" functional="0" release="0" software="C:\Users\Jessica\Desktop\ProgrammingAssignment3\ProgrammingAssignment3\csx\Release\roles\WebRole1" entryPoint="base\x64\WaHostBootstrapper.exe" parameters="base\x64\WaIISHost.exe " memIndex="-1" hostingEnvironment="frontendadmin" hostingEnvironmentVersion="2">
             <componentports>
               <inPort name="Endpoint1" protocol="http" portRanges="80" />
             </componentports>
@@ -82,7 +82,7 @@
           </sCSPolicy>
         </groupHascomponents>
         <groupHascomponents>
-          <role name="WorkerRole1" generation="1" functional="0" release="0" software="C:\Users\iGuest\Desktop\ProgrammingAssignment3\ProgrammingAssignment3\csx\Release\roles\WorkerRole1" entryPoint="base\x64\WaHostBootstrapper.exe" parameters="base\x64\WaWorkerHost.exe " memIndex="-1" hostingEnvironment="consoleroleadmin" hostingEnvironmentVersion="2">
+          <role name="WorkerRole1" generation="1" functional="0" release="0" software="C:\Users\Jessica\Desktop\ProgrammingAssignment3\ProgrammingAssignment3\csx\Release\roles\WorkerRole1" entryPoint="base\x64\WaHostBootstrapper.exe" parameters="base\x64\WaWorkerHost.exe " memIndex="-1" hostingEnvironment="consoleroleadmin" hostingEnvironmentVersion="2">
             <settings>
               <aCS name="Microsoft.WindowsAzure.Plugins.Diagnostics.ConnectionString" defaultValue="" />
               <aCS name="__ModelData" defaultValue="&lt;m role=&quot;WorkerRole1&quot; xmlns=&quot;urn:azure:m:v1&quot;&gt;&lt;r name=&quot;WebRole1&quot;&gt;&lt;e name=&quot;Endpoint1&quot; /&gt;&lt;/r&gt;&lt;r name=&quot;WorkerRole1&quot; /&gt;&lt;/m&gt;" />
@@ -110,9 +110,9 @@
     </group>
   </groups>
   <implements>
-    <implementation Id="ecb77b48-ee44-4561-88f9-b048274a446a" ref="Microsoft.RedDog.Contract\ServiceContract\ProgrammingAssignment3Contract@ServiceDefinition">
+    <implementation Id="0c8ffcc1-4fca-4b17-afa2-14dd9c2f969f" ref="Microsoft.RedDog.Contract\ServiceContract\ProgrammingAssignment3Contract@ServiceDefinition">
       <interfacereferences>
-        <interfaceReference Id="fffe6cef-2ac7-4bdc-a2af-fcd6d9539709" ref="Microsoft.RedDog.Contract\Interface\WebRole1:Endpoint1@ServiceDefinition">
+        <interfaceReference Id="8a3d8565-02b8-453a-9653-8415c0e8f4fe" ref="Microsoft.RedDog.Contract\Interface\WebRole1:Endpoint1@ServiceDefinition">
           <inPort>
             <inPortMoniker name="/ProgrammingAssignment3/ProgrammingAssignment3Group/WebRole1:Endpoint1" />
           </inPort>

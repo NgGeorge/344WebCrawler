@@ -15,7 +15,7 @@
     </ConfigurationSettings>
     <Contents>
       <Content destination=".\">
-        <SourceDirectory path="C:\Users\iGuest\Desktop\ProgrammingAssignment3\ProgrammingAssignment3\rcf\Release\WorkerRole1Content\" />
+        <SourceDirectory path="C:\Users\Jessica\Desktop\ProgrammingAssignment3\ProgrammingAssignment3\rcf\Release\WorkerRole1Content\" />
       </Content>
     </Contents>
   </WorkerRole>
@@ -35,7 +35,7 @@
     </Endpoints>
     <Contents>
       <Content destination=".\">
-        <SourceDirectory path="C:\Users\iGuest\Desktop\ProgrammingAssignment3\ProgrammingAssignment3\rcf\Release\WebRole1Content\" />
+        <SourceDirectory path="C:\Users\Jessica\Desktop\ProgrammingAssignment3\ProgrammingAssignment3\rcf\Release\WebRole1Content\" />
       </Content>
     </Contents>
   </WebRole>
