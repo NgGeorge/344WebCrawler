@@ -1,0 +1,4 @@
+Extra Credits : 
+Graphical dashboard 
+
+I created a nice graphical dashboard using a mixture of javascript and HTML with a sleek and clean interface and live updates the Crawler Status and information every 5 seconds. This way, the Crawler State (CPU/RAM) can be constantly tracked without needing to refresh the page every time the user wants an update. The dashboard interface also included functionalities such as when clearing the index, the start button would be disabled for the 40 second duration that is necessary to fully clear a table, helpful status messages, and clickable links on the error/last 10 indexed pages logged. There is also a graphical CPU/RAM usage bar that is displayed for CPU usage %, RAM usage, and RAM available to more easily convey the information. Finally, line graphs that chart the CPU/RAM stats over the last hour of activity is also displayed.
